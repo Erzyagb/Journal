@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+    :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f5f5f5;
+        --bg-tertiary: #e8e8e8;
+        --text-primary: #333333;
+        --text-secondary: #666666;
+        --border-color: #ddd;
+        --accent-color: #4a90e2;
+        --hover-color: #f0f0f0;
+        --tab-bg: #fff;
+        --editor-bg: #fff;
+    }
+
+    .dark-mode {
+        --bg-primary: #1e1e1e;
+        --bg-secondary: #2d2d2d;
+        --bg-tertiary: #3d3d3d;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #444;
+        --accent-color: #5ba3f5;
+        --hover-color: #333;
+        --tab-bg: #2d2d2d;
+        --editor-bg: #252525;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        padding: 20px;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .dark-mode-toggle {
+        padding: 8px 16px;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        cursor: pointer;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: background-color 0.3s;
+    }
+
+    .dark-mode-toggle:hover {
+        background-color: var(--hover-color);
+    }
+
+    .container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        max-width: 1800px;
+        margin: 0 auto;
+    }
+
+    .calendar-section {
+        background-color: var(--bg-secondary);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .calendar-header h2 {
+        font-size: 24px;
+    }
+
+    .month-nav {
+        display: flex;
+        gap: 10px;
+    }
+
+    .month-nav button {
+        padding: 8px 16px;
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .month-nav button:hover {
+        opacity: 0.9;
+    }
+
+    .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+    }
+
+    .day-header {
+        text-align: center;
+        font-weight: bold;
+        padding: 10px;
+        background-color: var(--bg-tertiary);
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .day {
+        aspect-ratio: 1;
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        min-height: 80px;
+    }
+
+    .day:hover {
+        background-color: var(--hover-color);
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .day.has-content::after {
+        content: '•';
+        position: absolute;
+        top: 4px;
+        right: 8px;
+        color: var(--accent-color);
+        font-size: 20px;
+    }
+
+    .day.has-reminder::before {
+        content: '🔔';
+        position: absolute;
+        top: 4px;
+        left: 8px;
+        font-size: 14px;
+    }
+
+    .day.other-month {
+        opacity: 0.3;
+    }
+
+    .day-number {
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+
+    .tabs-section {
+        background-color: var(--bg-secondary);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .tabs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .add-tab-btn {
+        padding: 8px 16px;
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .add-tab-btn:hover {
+        opacity: 0.9;
+    }
+
+    .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+    }
+
+    .tab {
+        padding: 8px 16px;
+        background-color: var(--tab-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px 6px 0 0;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        padding-right: 35px;
+    }
+
+    .tab:hover {
+        background-color: var(--hover-color);
+    }
+
+    .tab.active {
+        background-color: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .tab-close {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0 4px;
+    }
+
+    .tab.active .tab-close {
+        color: white;
+    }
+
+    .tab-close:hover {
+        color: #e74c3c;
+    }
+
+    .tab-content {
+        min-height: 400px;
+    }
+
+    .editor {
+        width: 100%;
+        min-height: 500px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 15px;
+        resize: vertical;
+        background-color: var(--editor-bg);
+        color: var(--text-primary);
+        line-height: 1.6;
+    }
+
+    .editor:focus {
+        outline: 2px solid var(--accent-color);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background-color: var(--bg-primary);
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 900px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+        font-size: 20px;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: var(--text-secondary);
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .close-btn:hover {
+        color: #e74c3c;
+    }
+
+    .editor-container {
+        margin-bottom: 15px;
+    }
+
+    .editor-toolbar {
+        margin-bottom: 10px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .editor-toolbar button {
+        padding: 8px 12px;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--text-primary);
+        font-size: 13px;
+    }
+
+    .editor-toolbar button:hover {
+        background-color: var(--hover-color);
+    }
+
+    .reminder-section {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: var(--bg-tertiary);
+        border-radius: 6px;
+    }
+
+    .reminder-section h4 {
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+
+    .reminder-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .reminder-form input {
+        flex: 1;
+        min-width: 200px;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
+    .reminder-form button {
+        padding: 8px 16px;
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .reminder-form button:hover {
+        opacity: 0.9;
+    }
+
+    .reminders-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .reminder-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background-color: var(--bg-primary);
+        border-radius: 4px;
+        border-left: 3px solid var(--accent-color);
+    }
+
+    .reminder-info {
+        flex: 1;
+    }
+
+    .reminder-date {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .reminder-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .reminder-actions button {
+        padding: 4px 12px;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .reminder-actions button:hover {
+        background-color: var(--hover-color);
+    }
+
+    .reminder-actions button.delete {
+        color: #e74c3c;
+    }
+
+    .reminder-popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: var(--bg-primary);
+        border: 2px solid var(--accent-color);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        z-index: 2000;
+        max-width: 400px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .reminder-popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .reminder-popup-title {
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    .reminder-management {
+        background-color: var(--bg-secondary);
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+
+    .reminder-management h3 {
+        font-size: 16px;
+        margin-bottom: 15px;
+        color: var(--text-secondary);
+    }
+
+    .task-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background-color: var(--bg-secondary);
+        border-radius: 6px;
+        border-left: 3px solid var(--accent-color);
+        transition: all 0.2s;
+    }
+
+    .task-item:hover {
+        background-color: var(--hover-color);
+    }
+
+    .task-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: var(--accent-color);
+    }
+
+    .task-text {
+        flex: 1;
+        font-size: 15px;
+    }
+
+    .task-item.completed {
+        opacity: 0.5;
+        text-decoration: line-through;
+    }
+
+    .input-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--bg-primary);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        z-index: 3000;
+        min-width: 300px;
+    }
+
+    .input-modal input {
+        width: 100%;
+        padding: 8px;
+        margin: 10px 0;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
+    .input-modal-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 15px;
+    }
+
+    .input-modal-buttons button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .input-modal-buttons .confirm {
+        background-color: var(--accent-color);
+        color: white;
+    }
+
+    .input-modal-buttons .cancel {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    @media (max-width: 1200px) {
+        .container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+</head>
+<body>
+    <div class="header">
+        <h1>My Personal Calendar</h1>
+        <button class="dark-mode-toggle" id="darkModeBtn">🌓 Toggle Dark Mode</button>
+    </div>
+
+<div class="container">
+    <div class="calendar-section">
+        <div class="calendar-header">
+            <h2 id="monthYear"></h2>
+            <div class="month-nav">
+                <button id="prevMonthBtn">← Previous</button>
+                <button id="todayBtn">Today</button>
+                <button id="nextMonthBtn">Next →</button>
+            </div>
+        </div>
+        <div class="calendar" id="calendar"></div>
+        
+        <div class="reminder-management">
+            <h3>⚙️ Manage Reminders</h3>
+            <div class="reminders-list" id="remindersList"></div>
+            
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                <h3 style="margin-bottom: 10px;">📋 Manage Recurring Tasks</h3>
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <input type="text" id="newTaskText" placeholder="Task name" style="flex: 1; min-width: 150px; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--bg-primary); color: var(--text-primary);">
+                        <label style="display: flex; align-items: center; gap: 5px; font-size: 13px;">
+                            <input type="checkbox" id="taskMonday" checked> Mon
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; font-size: 13px;">
+                            <input type="checkbox" id="taskFriday" checked> Fri
+                        </label>
+                        <button id="addTaskBtn" style="padding: 6px 12px; background-color: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px;">Add Task</button>
+                    </div>
+                </div>
+                <div id="recurringTasksList" style="display: flex; flex-direction: column; gap: 6px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs-section">
+        <div class="tabs-header">
+            <h2>Notes</h2>
+            <button class="add-tab-btn" id="addTabBtn">+ New Tab</button>
+        </div>
+        <div class="tabs" id="tabs"></div>
+        <div class="tab-content" id="tabContent"></div>
+    </div>
+</div>
+
+<div class="modal" id="dayModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle"></h3>
+            <button class="close-btn" id="closeModalBtn">&times;</button>
+        </div>
+        
+        <div id="tasksSection" style="margin-bottom: 20px;">
+            <h4 style="margin-bottom: 10px; font-size: 16px;">✓ Today's Tasks</h4>
+            <div id="tasksList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;"></div>
+        </div>
+        
+        <div class="editor-container">
+            <div class="editor-toolbar">
+                <button id="insertImageBtn">📷 Insert Image</button>
+                <button id="clearDayBtn">🗑️ Clear All</button>
+            </div>
+            <textarea class="editor" id="dayEditor" placeholder="Write your notes here... You can also paste images directly (Ctrl+V / Cmd+V)"></textarea>
+        </div>
+        <div class="reminder-section">
+            <h4>🔔 Set Reminder for This Day</h4>
+            <div class="reminder-form">
+                <input type="text" id="reminderText" placeholder="Enter reminder message">
+                <button id="addReminderBtn">Add Reminder</button>
+            </div>
+        </div>
+        <button class="add-tab-btn" id="saveDayBtn" style="margin-top: 15px;">Save & Close</button>
+    </div>
+</div>
+
+<script>
+    let currentDate = new Date();
+    let currentDay = null;
+    let currentTabId = null;
+    let data = {
+        days: {},
+        tabs: [],
+        reminders: [],
+        recurringTasks: [
+            { id: 'task-1', text: 'Check water', days: [1, 5] },
+            { id: 'task-2', text: 'Check toilet paper', days: [1, 5] }
+        ],
+        completedTasks: {}
+    };
+
+    // Universal dialog system - works in artifacts AND standalone
+    function showInputDialog(message, defaultValue = '') {
+        // Try native prompt first (works in standalone browsers)
+        if (typeof prompt === 'function') {
+            try {
+                return Promise.resolve(prompt(message, defaultValue));
+            } catch (e) {
+                // Fall through to custom dialog
+            }
+        }
+        
+        // Custom dialog for artifacts or if prompt fails
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2999;';
+            
+            const dialog = document.createElement('div');
+            dialog.className = 'input-modal';
+            dialog.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px;">${message}</div>
+                <input type="text" id="dialogInput" value="${defaultValue}">
+                <div class="input-modal-buttons">
+                    <button class="cancel">Cancel</button>
+                    <button class="confirm">OK</button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(dialog);
+            
+            const input = dialog.querySelector('#dialogInput');
+            input.focus();
+            input.select();
+            
+            const cleanup = () => {
+                document.body.removeChild(overlay);
+                document.body.removeChild(dialog);
+            };
+            
+            dialog.querySelector('.confirm').onclick = () => {
+                const value = input.value;
+                cleanup();
+                resolve(value);
+            };
+            
+            dialog.querySelector('.cancel').onclick = () => {
+                cleanup();
+                resolve(null);
+            };
+            
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    const value = input.value;
+                    cleanup();
+                    resolve(value);
+                } else if (e.key === 'Escape') {
+                    cleanup();
+                    resolve(null);
+                }
+            };
+        });
+    }
+
+    function showConfirmDialog(message) {
+        // Try native confirm first (works in standalone browsers)
+        if (typeof confirm === 'function') {
+            try {
+                return Promise.resolve(confirm(message));
+            } catch (e) {
+                // Fall through to custom dialog
+            }
+        }
+        
+        // Custom dialog for artifacts or if confirm fails
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2999;';
+            
+            const dialog = document.createElement('div');
+            dialog.className = 'input-modal';
+            dialog.innerHTML = `
+                <div style="margin-bottom: 20px;">${message}</div>
+                <div class="input-modal-buttons">
+                    <button class="cancel">Cancel</button>
+                    <button class="confirm">OK</button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(dialog);
+            
+            const cleanup = () => {
+                document.body.removeChild(overlay);
+                document.body.removeChild(dialog);
+            };
+            
+            dialog.querySelector('.confirm').onclick = () => {
+                cleanup();
+                resolve(true);
+            };
+            
+            dialog.querySelector('.cancel').onclick = () => {
+                cleanup();
+                resolve(false);
+            };
+        });
+    }
+
+    // Load data
+    function loadData() {
+        try {
+            const saved = localStorage.getItem('personalCalendarData');
+            if (saved) {
+                data = JSON.parse(saved);
+            } else {
+                data.tabs.push({
+                    id: 'tab-' + Date.now(),
+                    name: 'General Notes',
+                    content: ''
+                });
+            }
+        } catch (e) {
+            console.error('Error loading data:', e);
+        }
+    }
+
+    // Save data
+    function saveData() {
+        try {
+            localStorage.setItem('personalCalendarData', JSON.stringify(data));
+        } catch (e) {
+            console.error('Error saving data:', e);
+        }
+    }
+
+    // Dark mode
+    document.getElementById('darkModeBtn').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        try {
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        } catch (e) {}
+    });
+
+    try {
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+    } catch (e) {}
+
+    // Calendar rendering
+    function renderCalendar() {
+        const calendar = document.getElementById('calendar');
+        const monthYear = document.getElementById('monthYear');
+        
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+        
+        monthYear.textContent = monthNames[month] + ' ' + year;
+        calendar.innerHTML = '';
+        
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dayNames.forEach(function(day) {
+            const header = document.createElement('div');
+            header.className = 'day-header';
+            header.textContent = day;
+            calendar.appendChild(header);
+        });
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+        
+        for (let i = firstDay - 1; i >= 0; i--) {
+            const day = document.createElement('div');
+            day.className = 'day other-month';
+            day.innerHTML = '<div class="day-number">' + (daysInPrevMonth - i) + '</div>';
+            calendar.appendChild(day);
+        }
+        
+        for (let i = 1; i <= daysInMonth; i++) {
+            const day = document.createElement('div');
+            day.className = 'day';
+            const dateKey = year + '-' + month + '-' + i;
+            
+            if (data.days[dateKey] && data.days[dateKey].trim()) {
+                day.classList.add('has-content');
+            }
+            
+            const hasReminder = data.reminders.some(function(r) { return r.dateKey === dateKey; });
+            if (hasReminder) {
+                day.classList.add('has-reminder');
+            }
+            
+            day.innerHTML = '<div class="day-number">' + i + '</div>';
+            day.onclick = (function(y, m, d) {
+                return function() { openDay(y, m, d); };
+            })(year, month, i);
+            calendar.appendChild(day);
+        }
+        
+        const totalCells = calendar.children.length - 7;
+        const remainingCells = 42 - totalCells - 7;
+        for (let i = 1; i <= remainingCells; i++) {
+            const day = document.createElement('div');
+            day.className = 'day other-month';
+            day.innerHTML = '<div class="day-number">' + i + '</div>';
+            calendar.appendChild(day);
+        }
+    }
+
+    document.getElementById('prevMonthBtn').onclick = function() {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    };
+
+    document.getElementById('todayBtn').onclick = function() {
+        currentDate = new Date();
+        renderCalendar();
+    };
+
+    document.getElementById('nextMonthBtn').onclick = function() {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    };
+
+    function openDay(year, month, day) {
+        currentDay = year + '-' + month + '-' + day;
+        const modal = document.getElementById('dayModal');
+        const title = document.getElementById('modalTitle');
+        const editor = document.getElementById('dayEditor');
+        
+        const date = new Date(year, month, day);
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        title.textContent = dayNames[date.getDay()] + ', ' + monthNames[month] + ' ' + day + ', ' + year;
+        editor.value = data.days[currentDay] || '';
+        
+        renderDayTasks(date.getDay());
+        modal.classList.add('active');
+    }
+
+    function renderDayTasks(dayOfWeek) {
+        const tasksList = document.getElementById('tasksList');
+        const tasksSection = document.getElementById('tasksSection');
+        
+        const todaysTasks = data.recurringTasks.filter(function(task) {
+            return task.days.includes(dayOfWeek);
+        });
+        
+        if (todaysTasks.length === 0) {
+            tasksSection.style.display = 'none';
+            return;
+        }
+        
+        tasksSection.style.display = 'block';
+        tasksList.innerHTML = '';
+        
+        const completedToday = data.completedTasks[currentDay] || [];
+        
+        todaysTasks.forEach(function(task) {
+            const isCompleted = completedToday.includes(task.id);
+            const taskItem = document.createElement('div');
+            taskItem.className = 'task-item' + (isCompleted ? ' completed' : '');
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'task-checkbox';
+            checkbox.checked = isCompleted;
+            checkbox.onchange = (function(tid) {
+                return function() { toggleTask(tid); };
+            })(task.id);
+            
+            const span = document.createElement('span');
+            span.className = 'task-text';
+            span.textContent = task.text;
+            
+            taskItem.appendChild(checkbox);
+            taskItem.appendChild(span);
+            tasksList.appendChild(taskItem);
+        });
+    }
+
+    function toggleTask(taskId) {
+        if (!data.completedTasks[currentDay]) {
+            data.completedTasks[currentDay] = [];
+        }
+        
+        const completedList = data.completedTasks[currentDay];
+        const index = completedList.indexOf(taskId);
+        
+        if (index > -1) {
+            completedList.splice(index, 1);
+        } else {
+            completedList.push(taskId);
+        }
+        
+        saveData();
+        const date = new Date(currentDay.split('-')[0], currentDay.split('-')[1], currentDay.split('-')[2]);
+        renderDayTasks(date.getDay());
+    }
+
+    document.getElementById('closeModalBtn').onclick = function() {
+        document.getElementById('dayModal').classList.remove('active');
+    };
+
+    document.getElementById('saveDayBtn').onclick = function() {
+        const editor = document.getElementById('dayEditor');
+        data.days[currentDay] = editor.value;
+        saveData();
+        renderCalendar();
+        document.getElementById('dayModal').classList.remove('active');
+    };
+
+    document.getElementById('insertImageBtn').onclick = function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const editor = document.getElementById('dayEditor');
+                    editor.value += '\n[IMAGE:' + event.target.result + ']\n';
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    };
+
+    document.getElementById('clearDayBtn').onclick = function() {
+        document.getElementById('dayEditor').value = '';
+    };
+
+    document.getElementById('dayEditor').addEventListener('paste', function(e) {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                e.preventDefault();
+                const blob = items[i].getAsFile();
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const editor = document.getElementById('dayEditor');
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const text = editor.value;
+                    const imageTag = '\n[IMAGE:' + event.target.result + ']\n';
+                    editor.value = text.substring(0, start) + imageTag + text.substring(end);
+                };
+                reader.readAsDataURL(blob);
+            }
+        }
+    });
+
+    // Tabs
+    function renderTabs() {
+        const tabsContainer = document.getElementById('tabs');
+        const tabContent = document.getElementById('tabContent');
+        
+        tabsContainer.innerHTML = '';
+        
+        data.tabs.forEach(function(tab, index) {
+            const tabElement = document.createElement('div');
+            tabElement.className = 'tab';
+            if (currentTabId === tab.id || (currentTabId === null && index === 0)) {
+                tabElement.classList.add('active');
+                currentTabId = tab.id;
+            }
+            
+            const tabSpan = document.createElement('span');
+            tabSpan.textContent = tab.name;
+            tabSpan.ondblclick = (function(tid) {
+                return function(e) {
+                    e.stopPropagation();
+                    renameTab(tid);
+                };
+            })(tab.id);
+            
+            tabElement.appendChild(tabSpan);
+            
+            if (data.tabs.length > 1) {
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'tab-close';
+                closeBtn.textContent = '×';
+                closeBtn.onclick = (function(tid) {
+                    return function(e) {
+                        e.stopPropagation();
+                        deleteTab(tid);
+                    };
+                })(tab.id);
+                tabElement.appendChild(closeBtn);
+            }
+            
+            tabElement.onclick = (function(tid) {
+                return function(e) {
+                    if (e.target.className !== 'tab-close') {
+                        selectTab(tid);
+                    }
+                };
+            })(tab.id);
+            
+            tabsContainer.appendChild(tabElement);
+        });
+        
+        const activeTab = data.tabs.find(function(t) { return t.id === currentTabId; });
+        if (activeTab) {
+            tabContent.innerHTML = '';
+            
+            const toolbar = document.createElement('div');
+            toolbar.className = 'editor-toolbar';
+            
+            const imgBtn = document.createElement('button');
+            imgBtn.textContent = '📷 Insert Image';
+            imgBtn.onclick = insertImageToTab;
+            
+            const clearBtn = document.createElement('button');
+            clearBtn.textContent = '🗑️ Clear All';
+            clearBtn.onclick = clearTabContent;
+            
+            toolbar.appendChild(imgBtn);
+            toolbar.appendChild(clearBtn);
+            
+            const tabEditor = document.createElement('textarea');
+            tabEditor.className = 'editor';
+            tabEditor.id = 'tabEditor';
+            tabEditor.placeholder = 'Write your notes here... You can also paste images directly (Ctrl+V / Cmd+V)';
+            tabEditor.value = activeTab.content || '';
+            
+            tabEditor.oninput = function() {
+                activeTab.content = tabEditor.value;
+                saveData();
+            };
+            
+            tabEditor.addEventListener('paste', function(e) {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const start = tabEditor.selectionStart;
+                            const end = tabEditor.selectionEnd;
+                            const text = tabEditor.value;
+                            const imageTag = '\n[IMAGE:' + event.target.result + ']\n';
+                            tabEditor.value = text.substring(0, start) + imageTag + text.substring(end);
+                            activeTab.content = tabEditor.value;
+                            saveData();
+                        };
+                        reader.readAsDataURL(blob);
+                    }
+                }
+            });
+            
+            tabContent.appendChild(toolbar);
+            tabContent.appendChild(tabEditor);
+        }
+    }
+
+    document.getElementById('addTabBtn').onclick = async function() {
+        const name = await showInputDialog('Enter tab name:');
+        if (name && name.trim()) {
+            const newTab = {
+                id: 'tab-' + Date.now(),
+                name: name.trim(),
+                content: ''
+            };
+            data.tabs.push(newTab);
+            currentTabId = newTab.id;
+            saveData();
+            renderTabs();
+        }
+    };
+
+    function selectTab(tabId) {
+        const currentEditor = document.getElementById('tabEditor');
+        if (currentEditor && currentTabId) {
+            const currentTab = data.tabs.find(function(t) { return t.id === currentTabId; });
+            if (currentTab) {
+                currentTab.content = currentEditor.value;
+                saveData();
+            }
+        }
+        currentTabId = tabId;
+        renderTabs();
+    }
+
+    async function deleteTab(tabId) {
+        if (data.tabs.length > 1) {
+            const confirmed = await showConfirmDialog('Delete this tab?');
+            if (confirmed) {
+                data.tabs = data.tabs.filter(function(t) { return t.id !== tabId; });
+                if (currentTabId === tabId) {
+                    currentTabId = data.tabs[0].id;
+                }
+                saveData();
+                renderTabs();
+            }
+        }
+    }
+
+    async function renameTab(tabId) {
+        const tab = data.tabs.find(function(t) { return t.id === tabId; });
+        if (tab) {
+            const newName = await showInputDialog('Enter new tab name:', tab.name);
+            if (newName && newName.trim()) {
+                tab.name = newName.trim();
+                saveData();
+                renderTabs();
+            }
+        }
+    }
+
+    function insertImageToTab() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const editor = document.getElementById('tabEditor');
+                    editor.value += '\n[IMAGE:' + event.target.result + ']\n';
+                    const activeTab = data.tabs.find(function(t) { return t.id === currentTabId; });
+                    if (activeTab) {
+                        activeTab.content = editor.value;
+                        saveData();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+
+    async function clearTabContent() {
+        const confirmed = await showConfirmDialog('Clear all content in this tab?');
+        if (confirmed) {
+            const editor = document.getElementById('tabEditor');
+            editor.value = '';
+            const activeTab = data.tabs.find(function(t) { return t.id === currentTabId; });
+            if (activeTab) {
+                activeTab.content = '';
+                saveData();
+            }
+        }
+    }
+
+    // Reminders
+    document.getElementById('addReminderBtn').onclick = function() {
+        const text = document.getElementById('reminderText').value;
+        if (!text.trim()) {
+            return;
+        }
+        
+        const reminder = {
+            id: 'reminder-' + Date.now(),
+            text: text,
+            dateKey: currentDay,
+            date: new Date(currentDay.split('-')[0], currentDay.split('-')[1], currentDay.split('-')[2]).toLocaleDateString(),
+            shown: false
+        };
+        
+        data.reminders.push(reminder);
+        saveData();
+        renderCalendar();
+        renderReminders();
+        document.getElementById('reminderText').value = '';
+    };
+
+    function renderReminders() {
+        const remindersList = document.getElementById('remindersList');
+        remindersList.innerHTML = '';
+        
+        if (data.reminders.length === 0) {
+            remindersList.innerHTML = '<p style="color: var(--text-secondary); font-size: 14px;">No reminders set</p>';
+            return;
+        }
+        
+        data.reminders.forEach(function(reminder) {
+            const item = document.createElement('div');
+            item.className = 'reminder-item';
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'reminder-info';
+            
+            const textDiv = document.createElement('div');
+            textDiv.textContent = reminder.text;
+            
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'reminder-date';
+            dateDiv.textContent = reminder.date;
+            
+            infoDiv.appendChild(textDiv);
+            infoDiv.appendChild(dateDiv);
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'reminder-actions';
+            
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.onclick = (function(rid) {
+                return async function() {
+                    const r = data.reminders.find(function(x) { return x.id === rid; });
+                    if (r) {
+                        const newText = await showInputDialog('Edit reminder:', r.text);
+                        if (newText !== null && newText.trim()) {
+                            r.text = newText;
+                            saveData();
+                            renderReminders();
+                        }
+                    }
+                };
+            })(reminder.id);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = (function(rid) {
+                return async function() {
+                    const confirmed = await showConfirmDialog('Delete this reminder?');
+                    if (confirmed) {
+                        data.reminders = data.reminders.filter(function(r) { return r.id !== rid; });
+                        saveData();
+                        renderCalendar();
+                        renderReminders();
+                    }
+                };
+            })(reminder.id);
+            
+            actionsDiv.appendChild(editBtn);
+            actionsDiv.appendChild(deleteBtn);
+            
+            item.appendChild(infoDiv);
+            item.appendChild(actionsDiv);
+            remindersList.appendChild(item);
+        });
+    }
+
+    // Recurring Tasks
+    document.getElementById('addTaskBtn').onclick = function() {
+        const taskText = document.getElementById('newTaskText').value.trim();
+        if (!taskText) {
+            return;
+        }
+        
+        const days = [];
+        if (document.getElementById('taskMonday').checked) days.push(1);
+        if (document.getElementById('taskFriday').checked) days.push(5);
+        
+        if (days.length === 0) {
+            return;
+        }
+        
+        const newTask = {
+            id: 'task-' + Date.now(),
+            text: taskText,
+            days: days
+        };
+        
+        data.recurringTasks.push(newTask);
+        saveData();
+        renderRecurringTasks();
+        document.getElementById('newTaskText').value = '';
+    };
+
+    function renderRecurringTasks() {
+        const tasksList = document.getElementById('recurringTasksList');
+        tasksList.innerHTML = '';
+        
+        if (data.recurringTasks.length === 0) {
+            tasksList.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">No recurring tasks</p>';
+            return;
+        }
+        
+        data.recurringTasks.forEach(function(task) {
+            const dayNames = task.days.map(function(d) {
+                return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d];
+            }).join(', ');
+            
+            const item = document.createElement('div');
+            item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background-color: var(--bg-primary); border-radius: 4px; font-size: 13px;';
+            
+            const textDiv = document.createElement('div');
+            const taskNameDiv = document.createElement('div');
+            taskNameDiv.style.fontWeight = '500';
+            taskNameDiv.textContent = task.text;
+            
+            const taskDaysDiv = document.createElement('div');
+            taskDaysDiv.style.cssText = 'font-size: 11px; color: var(--text-secondary);';
+            taskDaysDiv.textContent = dayNames;
+            
+            textDiv.appendChild(taskNameDiv);
+            textDiv.appendChild(taskDaysDiv);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.style.cssText = 'padding: 4px 8px; border: 1px solid var(--border-color); background-color: var(--bg-secondary); color: #e74c3c; border-radius: 4px; cursor: pointer; font-size: 11px;';
+            deleteBtn.onclick = (function(tid) {
+                return async function() {
+                    const confirmed = await showConfirmDialog('Delete this recurring task?');
+                    if (confirmed) {
+                        data.recurringTasks = data.recurringTasks.filter(function(t) { return t.id !== tid; });
+                        saveData();
+                        renderRecurringTasks();
+                    }
+                };
+            })(task.id);
+            
+            item.appendChild(textDiv);
+            item.appendChild(deleteBtn);
+            tasksList.appendChild(item);
+        });
+    }
+
+    function checkReminders() {
+        const today = new Date();
+        const todayKey = today.getFullYear() + '-' + today.getMonth() + '-' + today.getDate();
+        
+        const todaysReminders = data.reminders.filter(function(r) {
+            return r.dateKey === todayKey && !r.shown;
+        });
+        
+        todaysReminders.forEach(function(reminder) {
+            const popup = document.createElement('div');
+            popup.className = 'reminder-popup';
+            
+            const header = document.createElement('div');
+            header.className = 'reminder-popup-header';
+            
+            const title = document.createElement('div');
+            title.className = 'reminder-popup-title';
+            title.textContent = '🔔 Reminder';
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'close-btn';
+            closeBtn.textContent = '×';
+            closeBtn.onclick = function() { popup.remove(); };
+            
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+            
+            const textDiv = document.createElement('div');
+            textDiv.style.marginTop = '10px';
+            textDiv.textContent = reminder.text;
+            
+            const dateDiv = document.createElement('div');
+            dateDiv.style.cssText = 'margin-top: 10px; font-size: 12px; color: var(--text-secondary);';
+            dateDiv.textContent = reminder.date;
+            
+            popup.appendChild(header);
+            popup.appendChild(textDiv);
+            popup.appendChild(dateDiv);
+            document.body.appendChild(popup);
+            
+            reminder.shown = true;
+            
+            setTimeout(function() { popup.remove(); }, 10000);
+        });
+        
+        if (todaysReminders.length > 0) {
+            saveData();
+        }
+    }
+
+    // Modal close on outside click
+    document.getElementById('dayModal').onclick = function(e) {
+        if (e.target.id === 'dayModal') {
+            document.getElementById('dayModal').classList.remove('active');
+        }
+    };
+
+    // Initialize
+    loadData();
+    renderCalendar();
+    renderTabs();
+    renderReminders();
+    renderRecurringTasks();
+    checkReminders();
+</script>
+</body>
+</html>
