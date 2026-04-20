@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Calendar</title>
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js"></script>
     <style>
         * {
             margin: 0;
@@ -666,23 +662,6 @@
 </div>
 
 <script>
-    <script>
-    // Firebase config - FILL THIS IN WITH YOUR VALUES
-    const firebaseConfig = {
-        apiKey: "AIzaSyBkU-6n7Fvhm666ViidJJ1rZrNv_Nqn5tA",
-        authDomain: "journal-1366e.firebaseapp.com",
-        databaseURL: "https://journal-1366e-default-rtdb.firebaseio.com",
-        projectId: "journal-1366e",
-        storageBucket: "journal-1366e.firebasestorage.app",
-        messagingSenderId: "903067573941",
-        appId: "1:903067573941:web:fde48346a03e692ecf28fc"
-    };
-    
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
-    let currentUser = null;
-
     let currentDate = new Date();
     let currentDay = null;
     let currentTabId = null;
@@ -806,48 +785,22 @@
     }
 
     // Load data
-       // Load data from Firebase
     function loadData() {
-        if (!currentUser) return;
-        const ref = db.ref('users/' + currentUser.uid + '/data');
-        ref.on('value', snapshot => {
-            if (snapshot.exists()) {
-                data = snapshot.val();
+        try {
+            const saved = localStorage.getItem('personalCalendarData');
+            if (saved) {
+                data = JSON.parse(saved);
             } else {
                 data.tabs.push({
                     id: 'tab-' + Date.now(),
                     name: 'General Notes',
                     content: ''
                 });
-                saveData();
             }
-            renderCalendar();
-            renderTabs();
-        });
-    }
-
-    // Save data to Firebase
-    function saveData() {
-        if (currentUser) {
-            db.ref('users/' + currentUser.uid + '/data').set(data);
+        } catch (e) {
+            console.error('Error loading data:', e);
         }
     }
-
-    // Setup Firebase auth
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            currentUser = user;
-            loadData();
-        } else {
-            const email = prompt('Email:');
-            const password = prompt('Password (6+ chars):');
-            if (email && password) {
-                auth.createUserWithEmailAndPassword(email, password)
-                    .catch(() => auth.signInWithEmailAndPassword(email, password))
-                    .catch(e => alert('Error: ' + e.message));
-            }
-        }
-    });
 
     // Save data
     function saveData() {
