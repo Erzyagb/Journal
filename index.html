@@ -660,8 +660,22 @@
         <button class="add-tab-btn" id="saveDayBtn" style="margin-top: 15px;">Save & Close</button>
     </div>
 </div>
-
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    
 <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyBkU-6n7Fvhm666ViidJJ1rZrNv_Nqn5tA",
+  authDomain: "journal-1366e.firebaseapp.com",
+  databaseURL: "https://journal-1366e-default-rtdb.firebaseio.com",
+  projectId: "journal-1366e",
+  storageBucket: "journal-1366e.firebasestorage.app",
+  messagingSenderId: "903067573941",
+  appId: "1:903067573941:web:fde48346a03e692ecf28fc"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();  
     let currentDate = new Date();
     let currentDay = null;
     let currentTabId = null;
