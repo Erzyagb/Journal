@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Calendar</title>
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
     <style>
         * {
             margin: 0;
@@ -675,10 +674,10 @@
         messagingSenderId: "903067573941",
         appId: "1:903067573941:web:fde48346a03e692ecf28fc"
     };
-    
+
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();    
+    const db = firebase.database();
+
     let currentDate = new Date();
     let currentDay = null;
     let currentTabId = null;
@@ -801,20 +800,12 @@
         });
     }
 
-        // Load data
+    // Load data
     function loadData() {
         try {
-            if (currentUser) {
-                db.ref('users/' + currentUser.uid + '/data').once('value', snapshot => {
-                    if (snapshot.exists()) {
-                        data = snapshot.val();
-                    }
-                    renderCalendar();
-                });
-            } else {
-                const saved = localStorage.getItem('personalCalendarData');
-                if (saved) {
-                    data = JSON.parse(saved);
+            db.ref('journal/data').once('value', snapshot => {
+                if (snapshot.exists()) {
+                    data = snapshot.val();
                 } else {
                     data.tabs.push({
                         id: 'tab-' + Date.now(),
@@ -822,7 +813,12 @@
                         content: ''
                     });
                 }
-            }
+                renderCalendar();
+                renderTabs();
+                renderReminders();
+                renderRecurringTasks();
+                checkReminders();
+            });
         } catch (e) {
             console.error('Error loading data:', e);
         }
@@ -831,11 +827,7 @@
     // Save data
     function saveData() {
         try {
-            if (currentUser) {
-                db.ref('users/' + currentUser.uid + '/data').set(data);
-            } else {
-                localStorage.setItem('personalCalendarData', JSON.stringify(data));
-            }
+            db.ref('journal/data').set(data);
         } catch (e) {
             console.error('Error saving data:', e);
         }
@@ -1487,18 +1479,6 @@
 
     // Initialize
     loadData();
-    renderCalendar();
-    renderTabs();
-    renderReminders();
-    renderRecurringTasks();
-    checkReminders();
-    // Firebase auth listener
-    auth.onAuthStateChanged(user => {
-        currentUser = user;
-        if (user) {
-            loadData();
-        }
-    });
 </script>
 </body>
 </html>
