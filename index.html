@@ -662,6 +662,21 @@
 </div>
 
 <script>
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBkU-6n7Fvhm666ViidJJ1rZrNv_Nqn5tA",
+  authDomain: "journal-1366e.firebaseapp.com",
+  databaseURL: "https://journal-1366e-default-rtdb.firebaseio.com",
+  projectId: "journal-1366e",
+  storageBucket: "journal-1366e.firebasestorage.app",
+  messagingSenderId: "903067573941",
+  appId: "1:903067573941:web:fde48346a03e692ecf28fc"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
     let currentDate = new Date();
     let currentDay = null;
     let currentTabId = null;
@@ -785,8 +800,13 @@
     }
 
     // Load data
-    function loadData() {
-        try {
+    async function loadData() {
+    try {
+        const snapshot = await get(ref(db, 'calendarData/defaultUser'));
+
+        if (snapshot.exists()) {
+            data = snapshot.val();
+        } else {
             const saved = localStorage.getItem('personalCalendarData');
             if (saved) {
                 data = JSON.parse(saved);
@@ -797,19 +817,23 @@
                     content: ''
                 });
             }
-        } catch (e) {
-            console.error('Error loading data:', e);
         }
+    } catch (e) {
+        console.error('Error loading data:', e);
     }
+}
 
     // Save data
-    function saveData() {
-        try {
-            localStorage.setItem('personalCalendarData', JSON.stringify(data));
-        } catch (e) {
-            console.error('Error saving data:', e);
-        }
+  async function saveData() {
+    try {
+        await set(ref(db, 'calendarData/defaultUser'), data);
+
+        // keep local backup
+        localStorage.setItem('personalCalendarData', JSON.stringify(data));
+    } catch (e) {
+        console.error('Error saving data:', e);
     }
+}
 
     // Dark mode
     document.getElementById('darkModeBtn').addEventListener('click', function() {
@@ -1456,12 +1480,17 @@
     };
 
     // Initialize
-    loadData();
+async function init() {
+    await loadData();
+
     renderCalendar();
     renderTabs();
     renderReminders();
     renderRecurringTasks();
     checkReminders();
-</script>
+}
+
+init();
+<script type="module">
 </body>
 </html>
