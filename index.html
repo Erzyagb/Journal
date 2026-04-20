@@ -831,7 +831,7 @@
         }
     }
 
-    // Setup Firebase auth
+        // Setup Firebase auth
     auth.onAuthStateChanged(user => {
         if (user) {
             currentUser = user;
@@ -846,6 +846,11 @@
             }
         }
     });
+
+    // Initialize app on load
+    loadData();
+    renderCalendar();
+    renderTabs();
 
     // Save data
     function saveData() {
