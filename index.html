@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Calendar</title>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js"></script>
     <style>
         * {
             margin: 0;
@@ -662,6 +666,19 @@
 </div>
 
 <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBkU-6n7Fvhm666ViidJJ1rZrNv_Nqn5tA",
+        authDomain: "journal-1366e.firebaseapp.com",
+        databaseURL: "https://journal-1366e-default-rtdb.firebaseio.com",
+        projectId: "journal-1366e",
+        storageBucket: "journal-1366e.firebasestorage.app",
+        messagingSenderId: "903067573941",
+        appId: "1:903067573941:web:fde48346a03e692ecf28fc"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();    
     let currentDate = new Date();
     let currentDay = null;
     let currentTabId = null;
@@ -784,18 +801,27 @@
         });
     }
 
-    // Load data
+        // Load data
     function loadData() {
         try {
-            const saved = localStorage.getItem('personalCalendarData');
-            if (saved) {
-                data = JSON.parse(saved);
-            } else {
-                data.tabs.push({
-                    id: 'tab-' + Date.now(),
-                    name: 'General Notes',
-                    content: ''
+            if (currentUser) {
+                db.ref('users/' + currentUser.uid + '/data').once('value', snapshot => {
+                    if (snapshot.exists()) {
+                        data = snapshot.val();
+                    }
+                    renderCalendar();
                 });
+            } else {
+                const saved = localStorage.getItem('personalCalendarData');
+                if (saved) {
+                    data = JSON.parse(saved);
+                } else {
+                    data.tabs.push({
+                        id: 'tab-' + Date.now(),
+                        name: 'General Notes',
+                        content: ''
+                    });
+                }
             }
         } catch (e) {
             console.error('Error loading data:', e);
@@ -805,7 +831,11 @@
     // Save data
     function saveData() {
         try {
-            localStorage.setItem('personalCalendarData', JSON.stringify(data));
+            if (currentUser) {
+                db.ref('users/' + currentUser.uid + '/data').set(data);
+            } else {
+                localStorage.setItem('personalCalendarData', JSON.stringify(data));
+            }
         } catch (e) {
             console.error('Error saving data:', e);
         }
@@ -1462,6 +1492,13 @@
     renderReminders();
     renderRecurringTasks();
     checkReminders();
+    // Firebase auth listener
+    auth.onAuthStateChanged(user => {
+        currentUser = user;
+        if (user) {
+            loadData();
+        }
+    });
 </script>
 </body>
 </html>
