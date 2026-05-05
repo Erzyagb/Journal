@@ -681,7 +681,7 @@
     // JSONBIN CONFIGURATION — fill in your values here
     // =====================================================
     const JSONBIN_BIN_ID  = '69fa5df3856a682189ae2fdb';   // e.g. '69fa5a7c36566621a82c0a0'
-    const JSONBIN_API_KEY = '$2a$10$oqZKEFvR2KNi/56a15ktGuHIBISBxNFNeQQmCT5vTbCcZ2XYaQAeq';   // e.g. '$2a$10$...'
+    const JSONBIN_API_KEY = '$2a$10$p7dC.ioebua.fqVYyxDCkeRNbIg9llF3Z/FUi4X4TI2gTpMKik2jK';   // e.g. '$2a$10$...'
     const JSONBIN_URL     = 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID;
     // =====================================================
 
@@ -699,7 +699,7 @@
     async function loadData() {
         try {
             const res = await fetch(JSONBIN_URL + '/latest', {
-                headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                headers: { 'X-Access-Key': JSONBIN_API_KEY }
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const json = await res.json();
@@ -739,7 +739,7 @@
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_API_KEY
+                        'X-Access-Key': JSONBIN_API_KEY
                     },
                     body: JSON.stringify(data)
                 });
@@ -1205,15 +1205,26 @@
         if (e.target.id === 'dayModal') document.getElementById('dayModal').classList.remove('active');
     };
 
-    // Initialize
-    (async function() {
-        await loadData();
+    function renderAll() {
         renderCalendar();
         renderTabs();
         renderReminders();
         renderRecurringTasks();
         checkReminders();
-    })();
+    }
+
+    // Initialize — always render the UI regardless of whether the fetch succeeds
+    loadData().then(function() {
+        renderAll();
+    }).catch(function(e) {
+        console.error('Fatal load error:', e);
+        // Show a visible banner so the user knows what happened
+        const banner = document.createElement('div');
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#d9534f;color:white;padding:10px 20px;font-size:14px;z-index:9999;text-align:center;';
+        banner.textContent = '⚠️ Could not connect to JSONBin. Check your BIN_ID and API_KEY in the file. Error: ' + e.message;
+        document.body.appendChild(banner);
+        renderAll();
+    });
 </script>
 </body>
 </html>
